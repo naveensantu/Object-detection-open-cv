@@ -24,3 +24,46 @@ matches = bf.match(des1,des2)
 matches = sorted(matches,key=lambda x:x.distance)
 reeses_matches = cv2.drawMatches(reeses,kp1 ,cereals,kp2,matches[:25],None,flags=2)
 display(reeses_matches)
+
+sift = cv2.xfeatures2d.SIFT_create()
+kp1,des1 = sift.detectAndCompute(reeses,None)
+kp2,des2 = sift.detectAndCompute(cereals,None)
+
+bf = cv2.BFMatcher()
+
+matches= bf.knnMatch(des1,des2,k=2)
+good = []
+
+for match1,match2 in matches:
+    if match1.distance < 0.75*match2.distance:
+        good.append([match1])
+
+good
+
+matches
+
+sift_matches = cv2.drawMatchesKnn(reeses, kp1, cereals, kp2, good, None,flags=2)
+display(sift_matches, cmap="gray")
+
+sift = cv2.xfeatures2d.SIFT_create()
+
+kp1,des1 = sift.detectAndCompute(reeses,None)
+kp2,des2 = sift.detectAndCompute(cereals,None)
+
+
+FLANN_INDEX_KDTREE = 0
+index_param = dict(algorithm = FLANN_INDEX_KDTREE,tress=5)
+search_param=dict(checks=50)
+flann = cv2.FlannBasedMatcher(index_param,search_param)
+
+matches = flann.knnMatch(des1,des2,k=2)
+matchesMask=[[0,0] for i in range (len(matches))]
+
+for i,(match1,match2) in enumerate(matches):
+    if match1.distance < 0.75*match2.distance:
+        matchesMask[i] = [1,0]
+
+draw_params = dict(matchColor=(0,255,0) , singlePointColor=(255,0,0) , matchesMask=matchesMask , flags=0)
+
+flann_matches = cv2.drawMatchesKnn(reeses,kp1,cereals,kp2,matches,None,**draw_params)
+display(flann_matches)
